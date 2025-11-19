@@ -1,0 +1,227 @@
+{% extends "main/base.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+
+<style>
+/* --------- Better Glass UI Styling ---------- */
+.card.glass {
+  background: rgba(255,255,255,0.06);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  padding: 35px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+label {
+  color: #e8e8e8;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* ------ Improved Inputs ------ */
+input, select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.08);
+  color: white !important;
+  transition: 0.2s ease;
+}
+
+input:focus, select:focus {
+  border-color: #22d3ee;
+  background: rgba(255,255,255,0.12);
+  outline: none;
+  box-shadow: 0 0 10px rgba(34,211,238,0.4);
+}
+
+/* Fix input-group controls */
+.input-group .form-control {
+  border-radius: 10px 0 0 10px !important;
+}
+.card.glass h3 {
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(56,189,248,0.4);
+}
+
+/* Buttons */
+.btn-success {
+  padding: 10px 26px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+}
+
+.small-note {
+  opacity: 0.8;
+}
+
+/* Page layout spacing */
+.form-section {
+  margin-bottom: 20px;
+}
+</style>
+
+<div class="row justify-content-center py-4">
+  <div class="col-lg-8 col-md-10">
+
+    <div class="card glass">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h3 class="small-note">Create your account</h3>
+
+          <div class="small-note">Join Beauty & Beast — get AI workout & diet plans</div>
+        </div>
+        <div>
+          <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login</a>
+        </div>
+      </div>
+
+      {% if user_form.non_field_errors or profile_form.non_field_errors %}
+        <div class="alert alert-danger">Please fix the errors below.</div>
+      {% endif %}
+
+      <form method="post" novalidate id="registerForm">
+        {% csrf_token %}
+        <div class="row g-4">
+
+          <!-- LEFT SIDE -->
+          <div class="col-md-6">
+
+            <div class="form-section">
+              {{ user_form.username.label_tag }}
+              {{ user_form.username }}
+              {% if user_form.username.errors %}
+                <div class="text-danger small">{{ user_form.username.errors|striptags }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-section">
+              {{ user_form.email.label_tag }}
+              {{ user_form.email }}
+              {% if user_form.email.errors %}
+                <div class="text-danger small">{{ user_form.email.errors|striptags }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-section">
+              {{ user_form.password.label_tag }}
+              <div class="input-group">
+                {{ user_form.password }}
+                <button type="button" class="btn btn-outline-secondary" id="togglePass">
+                  👁
+                </button>
+              </div>
+              <div id="passStrength" class="small mt-1"></div>
+            </div>
+
+            <div class="form-section">
+              {{ user_form.password2.label_tag }}
+              <div class="input-group">
+                {{ user_form.password2 }}
+                <button type="button" class="btn btn-outline-secondary" id="togglePass2">👁</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT SIDE -->
+          <div class="col-md-6">
+
+            <div class="form-section">
+              {{ profile_form.phone.label_tag }}
+              {{ profile_form.phone }}
+            </div>
+
+            <div class="row">
+              <div class="col-6 form-section">
+                {{ profile_form.age.label_tag }}
+                {{ profile_form.age }}
+              </div>
+              <div class="col-6 form-section">
+                <label>Gender</label>
+                <select name="gender" required>
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-6 form-section">
+                {{ profile_form.height_cm.label_tag }}
+                {{ profile_form.height_cm }}
+              </div>
+              <div class="col-6 form-section">
+                {{ profile_form.weight_kg.label_tag }}
+                {{ profile_form.weight_kg }}
+              </div>
+            </div>
+
+            <div class="form-section">
+              {{ profile_form.goal.label_tag }}
+              {{ profile_form.goal }}
+            </div>
+
+            <div class="form-section">
+              <label>Experience Level</label>
+              <select name="experience_level" required>
+                <option value="">Select experience</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Pro">Pro</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <div class="small-note">By creating an account, you agree to our Terms & Privacy.</div>
+          <button type="submit" class="btn btn-success">Create account</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+/* Password Toggle */
+function toggleField(input, btn) {
+  btn.addEventListener('click', () => {
+    input.type = input.type === "password" ? "text" : "password";
+  });
+}
+
+const p = document.getElementById('{{ user_form.password.id_for_label }}');
+const p2 = document.getElementById('{{ user_form.password2.id_for_label }}');
+
+toggleField(p, document.getElementById('togglePass'));
+toggleField(p2, document.getElementById('togglePass2'));
+
+/* Password Strength */
+const passStrength = document.getElementById('passStrength');
+p.addEventListener("input", (e) => {
+  const v = e.target.value;
+  let score = 0;
+  if (v.length >= 8) score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+
+  const labels = ["Very weak", "Weak", "Okay", "Strong", "Excellent"];
+  passStrength.textContent = labels[score] || "";
+});
+</script>
+
+{% endblock %}

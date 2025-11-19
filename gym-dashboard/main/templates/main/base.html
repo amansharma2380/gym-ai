@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}Gym Dashboard{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+      :root{
+        --accent:#ff6b6b;         /* primary accent */
+        --muted:#6b7280;
+        --bg-grad-1:#0f1724;
+        --bg-grad-2:#0b1220;
+        --glass: rgba(255,255,255,0.06);
+      }
+
+      html,body{
+        height:100%;
+        font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        background: linear-gradient(180deg,var(--bg-grad-1) 0%, #071025 60%), radial-gradient( circle at 10% 10%, rgba(255,255,255,0.02), transparent 10% );
+        color:#e6eef8;
+      }
+
+      /* Container style to feel like app */
+      .app-container{
+        min-height: calc(100vh - 120px);
+        padding-top: 12px;
+        padding-bottom: 28px;
+      }
+
+      /* Stylish navbar */
+      .navbar {
+        background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        backdrop-filter: blur(6px);
+      }
+      .navbar .navbar-brand { font-weight:800; color:#fff; letter-spacing:0.4px; }
+      .navbar .nav-link { color: rgba(230,238,248,0.85); margin-right: 6px; }
+      .navbar .nav-link:hover { color: white; }
+
+      /* Brand accent */
+      .brand-accent {
+        display:inline-block;
+        background: linear-gradient(90deg,var(--accent), #f97316);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      /* Glass card */
+      .card.glass {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.04);
+        box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+      }
+
+      /* Footer */
+      footer.site-footer {
+        border-top: 1px solid rgba(255,255,255,0.04);
+        padding: 18px 0;
+        color: var(--muted);
+      }
+
+      /* Small helpers */
+      
+      .muted { color: var(--muted); }
+      .small-note { font-size: 0.9rem; color: #9fb0d4; }
+
+      /* Avatar */
+      .avatar {
+        width:36px; height:36px; border-radius:50%;
+        background: linear-gradient(90deg,#fff 0%, #ddd 100%);
+        display:inline-block; overflow:hidden;
+      }
+
+      /* Dark mode styles */
+      .dark-mode body {
+        background: linear-gradient(180deg,#04050a,#021022);
+      }
+
+      /* Responsive tweak */
+      @media (max-width:420px){
+        .navbar .nav-link { padding-left:6px; padding-right:6px; font-size:14px; }
+      }
+      /* Make form labels darker and more readable */
+form label {
+  color: #e6e6e6 !important;   /* brighter white */
+  font-weight: 600;             /* more emphasis */
+  letter-spacing: 0.3px;
+}
+
+/* Make form input text more visible */
+form input,
+form select,
+form textarea {
+  color: #f4f4f4 !important;
+  background: rgba(255,255,255,0.07) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+/* Placeholder text slightly brighter for readability */
+form input::placeholder,
+form select::placeholder,
+form textarea::placeholder {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Increase contrast for dropdowns */
+form select option {
+  background: #0f1724;
+  color: #f4f4f4;
+}
+
+/* Field error messages more visible */
+.text-danger.small {
+  color: #ff6b6b !important;
+  font-weight: 500;
+}
+
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+          <span class="brand-accent">Beauty</span> &nbsp; $ &nbsp;<span style="opacity:.9">Beast</span>
+        </a>
+
+        <button class="navbar-toggler btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+            <path d="M2.5 12.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0-4a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0-4a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11z"/>
+          </svg>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Join</a></li>
+
+            {% if user.is_authenticated %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                  <div class="avatar me-2 text-dark">
+                    <!-- Simple initials avatar -->
+                    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#0b1220;font-weight:700;">
+                      {{ user.username|slice:":1"|upper }}
+                    </div>
+                  </div>
+                  <span class="me-2">{{ user.username }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="{% url 'dashboard' %}">My Dashboard</a></li>
+                  <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Edit Profile</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
+                </ul>
+              </li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+            {% endif %}
+
+            <li class="nav-item ms-3">
+              <button id="themeToggle" class="btn btn-sm btn-outline-light" title="Toggle dark mode">
+                <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container app-container">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} shadow-sm">{{ message }}</div>
+      {% endfor %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer bg-transparent">
+      <div class="container d-flex justify-content-between align-items-center py-3">
+        <div class="small-note">&copy; {{ now.year }} Beauty & Beast — DEHRADUN</div>
+        <div class="muted">Need help? <a href="mailto:support@example.com" class="text-decoration-none">support@example.com</a></div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // Theme toggle (persist in localStorage)
+      const body = document.documentElement;
+      const toggle = document.getElementById('themeToggle');
+      const saved = localStorage.getItem('theme') || 'dark';
+      if (saved === 'dark') body.classList.add('dark-mode');
+
+      toggle?.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const active = body.classList.contains('dark-mode') ? 'dark' : 'light';
+        localStorage.setItem('theme', active);
+      });
+
+      // Add simple fade-in for content
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.card.glass, .glass-card, .fade-in').forEach((el,i) => {
+          el.style.opacity = 0;
+          setTimeout(()=> el.style.transition = 'opacity .6s ease', 20);
+          setTimeout(()=> el.style.opacity = 1, 80 + i*80);
+        });
+      });
+    </script>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,198 @@
+{% extends "main/base.html" %}
+{% block title %}Gym Dashboard — Home{% endblock %}
+{% block content %}
+
+<style>
+/* ---- Hero Section Animation ---- */
+.hero {
+  position: relative;
+  padding: 120px 20px;
+  background: linear-gradient(135deg, #0d1117, #181c25);
+  color: white;
+  text-align: center;
+  overflow: hidden;
+  border-radius: 5%;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  animation: fadeInDown 1s ease;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+  animation: fadeInUp 1.3s ease;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Glass Cards ---- */
+.glass-card {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 25px;
+  transition: 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.glass-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* ---- Fade In on Scroll ---- */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.7s ease-out;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* CTA Buttons */
+.btn-cta {
+  font-size: 1.2rem;
+  padding: 12px 25px;
+  border-radius: 50px;
+  margin: 10px;
+}
+
+/* Facilities badges/cards */
+.facility-pill {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(15,118,110,0.15);
+  border: 1px solid rgba(45,212,191,0.35);
+  color: #e5fffb;
+  font-size: 0.95rem;
+  margin: 4px;
+}
+</style>
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero">
+  <h1>Transform Your Fitness Journey</h1>
+  <p>Your personal AI-powered fitness dashboard — workouts, diet, tracking &amp; more.</p>
+
+  <div class="mt-4">
+    <a href="{% url 'login' %}" class="btn btn-primary btn-cta">Login</a>
+    <a href="{% url 'register' %}" class="btn btn-outline-light btn-cta">Register</a>
+  </div>
+</section>
+
+<!-- ===== ABOUT GYM & OWNER ===== -->
+<div class="container my-5 fade-in">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="glass-card h-100">
+        <h2 class="mb-3">About Beauty &amp; Beast Gym</h2>
+        <p>
+          <strong>Beauty &amp; Beast</strong> is a community-focused gym based in 
+          <strong>Dehradun</strong>, built for people who want real results — not just memberships.
+          From beginners to serious lifters, we provide structured training, personal guidance and now an
+          AI-powered dashboard to keep your workouts and nutrition on track.
+        </p>
+        <p class="mb-0">
+          <strong>Owner:</strong> <span style="color:#fbbf24;">Rajdeep Roy</span><br>
+          With years of hands-on coaching experience, Rajdeep believes in combining
+          proper form, progressive overload and disciplined nutrition. The AI dashboard
+          is designed to extend that same personal guidance into your daily routine.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="glass-card h-100 text-center d-flex flex-column justify-content-between">
+        <div>
+          <h3 class="mb-2">Visit Us in Dehradun</h3>
+          <p class="mb-3">
+            We’re located in the heart of Dehradun with easy road access and nearby public transport.
+          </p>
+        </div>
+        <div class="mb-3">
+          <p class="mb-1 small text-uppercase">Quick Facilities Snapshot</p>
+          <span class="facility-pill">🥊 Boxing Classes</span>
+          <span class="facility-pill">🏃 Cardio Sessions</span>
+          <span class="facility-pill">🏋️ Weight Training</span>
+          <span class="facility-pill">💪 Strength Training</span>
+          <span class="facility-pill">⚡ Powerlifting Setup</span>
+        </div>
+        <div>
+          <a href="https://www.google.com/maps?q=Beauty+%26+Beast+Gym+Dehradun" 
+             target="_blank"
+             class="btn btn-outline-success">
+            Locate Us on Google Maps
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FEATURES SECTION ===== -->
+<div class="container my-5">
+  <div class="row g-4">
+    <div class="col-lg-4 col-md-6 fade-in">
+      <div class="glass-card text-center p-4">
+        <h3>💪 AI Workout Plans</h3>
+        <p>Get personalized workout plans generated using advanced AI models tailored for your body and goals.</p>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6 fade-in">
+      <div class="glass-card text-center p-4">
+        <h3>🥗 Smart Diet Plans</h3>
+        <p>Your nutrition strategy created automatically — balanced, healthy and optimized for results.</p>
+      </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6 fade-in">
+      <div class="glass-card text-center p-4">
+        <h3>📊 Progress Tracking</h3>
+        <p>Track your weight, performance, classes &amp; workouts all in one interactive dashboard.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CALL TO ACTION SECTION ===== -->
+<div class="container my-5 fade-in">
+  <div class="glass-card text-center p-5">
+    <h2 class="mb-3">Ready to Start Your Journey?</h2>
+    <p class="mb-4">
+      Join our Dehradun community and let coach <strong>Rajdeep Roy</strong> and the AI Gym Dashboard
+      guide you through boxing, cardio, weight training, strength training and powerlifting — step by step.
+    </p>
+    <a href="{% url 'register' %}" class="btn btn-success btn-lg">Get Started Now</a>
+  </div>
+</div>
+
+<script>
+/* ---- Scroll Animation Observer ---- */
+const elements = document.querySelectorAll('.fade-in');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+});
+elements.forEach(el => observer.observe(el));
+</script>
+
+{% endblock %}

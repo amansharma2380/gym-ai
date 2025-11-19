@@ -1,0 +1,32 @@
+{% extends "main/base.html" %}
+{% block title %}Admin Payments{% endblock %}
+{% block content %}
+<h2>Payments (Admin)</h2>
+<table class="table">
+  <thead><tr><th>Member</th><th>Amount</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for p in payments %}
+      <tr>
+        <td>{{ p.member.user.username }}</td>
+        <td>{{ p.amount }}</td>
+        <td>{{ p.status }}</td>
+        <td>{{ p.created_at }}</td>
+        <td>
+          {% if p.status == 'Pending' %}
+          <form method="post" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="payment_id" value="{{ p.id }}">
+            <button name="action" value="approve" class="btn btn-sm btn-success">Approve</button>
+          </form>
+          <form method="post" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="payment_id" value="{{ p.id }}">
+            <button name="action" value="reject" class="btn btn-sm btn-danger">Reject</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

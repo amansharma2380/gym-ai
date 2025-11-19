@@ -1,0 +1,11 @@
+{% extends "main/base.html" %}
+{% block title %}Make Payment{% endblock %}
+{% block content %}
+<h2>Make Payment (Demo)</h2>
+<p>This demo creates a pending payment record — admin can approve it in the Admin Payments view.</p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-primary">Submit Payment (Demo)</button>
+</form>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "main/base.html" %}
+{% block title %}Add Progress{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <h2>Add Progress</h2>
+    <p>Record weight and body fat for progress tracking.</p>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Add</button>
+        <a class="btn btn-secondary" href="{% url 'dashboard' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
