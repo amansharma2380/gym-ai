@@ -7,7 +7,7 @@
   <div>
     <button id="btn-generate" class="btn btn-primary me-2" {% if not profile.is_payment_approved %}disabled title="Payment required"{% endif %}>
       <span id="gen-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-      <span id="gen-text">Generate Plan</span>
+      <span id="gen-text">Generate AI Plan</span>
     </button>
     <a class="btn btn-outline-secondary" href="{% url 'edit_profile' %}">Edit Profile</a>
   </div>
