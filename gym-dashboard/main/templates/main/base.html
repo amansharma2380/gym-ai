@@ -232,14 +232,24 @@
           </li>
 
         {% else %}
-          <!-- NOT LOGGED IN: show Join + Login -->
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'register' %}">Join</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'login' %}">Login</a>
-          </li>
-        {% endif %}
+  <!-- NOT LOGGED IN: show Join + Login + Admin Login -->
+  <li class="nav-item">
+    <a class="nav-link" href="{% url 'register' %}">Join</a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" href="{% url 'login' %}">Login</a>
+  </li>
+
+  <!-- Admin Login button (visible only when NOT logged in) -->
+  <li class="nav-item ms-2">
+    <a href="/admin/login/" class="btn btn-sm btn-warning fw-semibold"
+       style="color:#0b1220; background:linear-gradient(90deg,#ffd166,#ef476f); border:none;">
+       Admin Login
+    </a>
+  </li>
+{% endif %}
+
 
         <li class="nav-item ms-3">
           <button id="themeToggle" class="btn btn-sm btn-outline-light" title="Toggle dark mode">
