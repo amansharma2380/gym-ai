@@ -19,7 +19,7 @@
         --muted:#6b7280;
         --bg-grad-1:#0f1724;
         --bg-grad-2:#0b1220;
-        --glass: rgba(255,255,255,0.06);
+        --glass: rgba(15,23,42,0.9);
       }
 
       html,body{
@@ -55,11 +55,32 @@
         color: transparent;
       }
 
-      /* Glass card */
+      /* Glass card – DARK + high contrast */
       .card.glass {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.04);
+        background: var(--glass); /* darker navy glass */
+        border: 1px solid rgba(148,163,184,0.35);
         box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+        color:#e6eef8;
+      }
+
+      /* Ensure text inside glass cards is readable */
+      .card.glass h1,
+      .card.glass h2,
+      .card.glass h3,
+      .card.glass h4,
+      .card.glass h5,
+      .card.glass h6,
+      .card.glass p,
+      .card.glass small,
+      .card.glass li,
+      .card.glass span,
+      .card.glass strong,
+      .card.glass label {
+        color:#e6eef8 !important;
+      }
+
+      .card.glass .text-muted {
+        color:#9ca3af !important;
       }
 
       /* Footer */
@@ -70,7 +91,6 @@
       }
 
       /* Small helpers */
-      
       .muted { color: var(--muted); }
       .small-note { font-size: 0.9rem; color: #9fb0d4; }
 
@@ -90,50 +110,81 @@
       @media (max-width:420px){
         .navbar .nav-link { padding-left:6px; padding-right:6px; font-size:14px; }
       }
-      /* Make form labels darker and more readable */
-form label {
-  color: #e6e6e6 !important;   /* brighter white */
-  font-weight: 600;             /* more emphasis */
-  letter-spacing: 0.3px;
+
+      /* Make form labels readable */
+      form label {
+        color: #e6e6e6 !important;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+
+      /* Make form input text more visible */
+      form input,
+      form select,
+      form textarea {
+        color: #f4f4f4 !important;
+        background: rgba(15,23,42,0.9) !important;  /* match card glass */
+        border: 1px solid rgba(148,163,184,0.35) !important;
+      }
+
+      /* Placeholder text slightly lighter for dark bg */
+      form input::placeholder,
+      form textarea::placeholder {
+        color: rgba(226,232,240,0.6) !important;
+      }
+
+      /* Increase contrast for dropdowns */
+      form select option {
+        background: #0f1724;
+        color: #f4f4f4;
+      }
+
+      /* Field error messages more visible */
+      .text-danger.small {
+        color: #ff6b6b !important;
+        font-weight: 500;
+      }
+
+      /* Fix dropdown hidden behind graph or glass cards */
+      .dropdown-menu {
+        z-index: 9999 !important;
+        position: absolute !important;
+      }
+      .navbar {
+        z-index: 10000 !important;
+        position: relative;
+      }
+      /* ---- Fix accordion colors inside glass cards ---- */
+.card.glass .accordion-item {
+  background: transparent;
+  border: 1px solid rgba(148,163,184,0.25);
 }
 
-/* Make form input text more visible */
-form input,
-form select,
-form textarea {
-  color: #f4f4f4 !important;
-  background: rgba(255,255,255,0.07) !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
+.card.glass .accordion-button {
+  background: rgba(15,23,42,0.96);   /* dark header */
+  color: #e6eef8;                    /* light text */
 }
 
-/* Placeholder text slightly brighter for readability */
-form input::placeholder,
-form select::placeholder,
-form textarea::placeholder {
-  color: rgba(0, 0, 0, 0.6) !important;
+.card.glass .accordion-button:not(.collapsed) {
+  background: rgba(30,41,59,0.98);
+  color: #e6eef8;
+  box-shadow: none;
 }
 
-/* Increase contrast for dropdowns */
-form select option {
-  background: #0f1724;
-  color: #f4f4f4;
+.card.glass .accordion-body {
+  background: rgba(15,23,42,0.98);   /* dark body */
+  color: #e6eef8;
 }
 
-/* Field error messages more visible */
-.text-danger.small {
-  color: #ff6b6b !important;
-  font-weight: 500;
-}
-/* Fix dropdown hidden behind graph or glass cards */
-.dropdown-menu {
-  z-index: 9999 !important;
-  position: absolute !important;
-}
-.navbar {
-  z-index: 10000 !important;
-  position: relative;
+.card.glass .accordion-button::after {
+  filter: invert(1) opacity(0.7);    /* make arrow icon visible on dark bg */
 }
 
+/* Make preformatted plan text readable */
+.card.glass pre {
+  color: #e6eef8;
+  background: transparent;
+}
 
     </style>
   </head>
