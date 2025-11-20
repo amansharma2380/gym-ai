@@ -34,6 +34,20 @@ class DietPlan(models.Model):
         return f"{self.member.user.username} - {self.title}"
 
 class ProgressEntry(models.Model):
+    member = models.ForeignKey('MemberProfile', on_delete=models.CASCADE, related_name='progress_entries')
+    date = models.DateField()
+    weight_kg = models.FloatField(null=True, blank=True)
+    body_fat_pct = models.FloatField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.member.user.username} - {self.date}"
+
+
+class Progress(models.Model):
     member = models.ForeignKey(MemberProfile, on_delete=models.CASCADE, related_name='progress')
     date = models.DateField()
     weight_kg = models.FloatField(null=True, blank=True)
@@ -45,6 +59,17 @@ class ProgressEntry(models.Model):
 
     def __str__(self):
         return f"{self.member.user.username} - {self.date}"
+
+
+class ProgressPhoto(models.Model):
+    member = models.ForeignKey('MemberProfile', related_name='photos', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='progress_photos/')
+    caption = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Photo of {self.member.user.username} - {self.created_at.date()}"
+
 
 class Payment(models.Model):
     STATUS_CHOICES = [

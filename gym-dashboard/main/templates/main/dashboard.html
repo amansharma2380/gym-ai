@@ -5,65 +5,107 @@
 <div class="d-flex justify-content-between align-items-start mb-3">
   <h2>Hi, {{ user.username }}</h2>
   <div>
-    <button id="btn-generate" class="btn btn-primary me-2" {% if not profile.is_payment_approved %}disabled title="Payment required"{% endif %}>
-      <span id="gen-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-      <span id="gen-text">Generate AI Plan</span>
-    </button>
-    <a class="btn btn-outline-secondary" href="{% url 'edit_profile' %}">Edit Profile</a>
+    {% if profile.is_payment_approved %}
+      <button id="btn-generate" class="btn btn-primary me-2">
+        <span id="gen-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+        <span id="gen-text">Generate AI Plan</span>
+      </button>
+    {% else %}
+      <button class="btn btn-secondary me-2" disabled title="Payment approval required">
+        Generate AI Plan
+      </button>
+    {% endif %}
+    <a class="btn btn-outline-light" href="{% url 'edit_profile' %}">Edit Profile</a>
   </div>
 </div>
 
 <div class="row">
-  <!-- Left column: profile & actions -->
+  <!-- LEFT COLUMN: Profile & analytics -->
   <div class="col-lg-4 mb-3">
-    <div class="card shadow-sm mb-3">
-      <div class="card-body">
-        <h5 class="card-title">Profile</h5>
-        <p class="mb-1"><strong>Goal:</strong> {{ profile.goal|default:"—" }}</p>
-        <p class="mb-1"><strong>Weight:</strong> {{ profile.weight_kg|default:"—" }} kg</p>
-        <p class="mb-1"><strong>Height:</strong> {{ profile.height_cm|default:"—" }} cm</p>
-        <p class="mb-1"><strong>Age:</strong> {{ profile.age|default:"—" }}</p>
-        <p class="mb-1"><strong>Gender:</strong> {{ profile.gender|default:"—" }}</p>
+    <div class="card glass mb-3 p-3">
+      <h5 class="mb-2">Profile</h5>
+      <p class="mb-1"><strong>Goal:</strong> {{ profile.goal|default:"—" }}</p>
+      <p class="mb-1"><strong>Experience:</strong> {{ profile.experience_level|default:"—" }}</p>
+      <p class="mb-1"><strong>Age:</strong> {{ profile.age|default:"—" }}</p>
+      <p class="mb-1"><strong>Height:</strong> {{ profile.height_cm|default:"—" }} cm</p>
+      <p class="mb-1"><strong>Weight:</strong> {{ profile.weight_kg|default:"—" }} kg</p>
 
-        <p class="mt-2">
-  <strong>Payment:</strong>
-  {% if profile.is_payment_approved %}
-    <span class="badge bg-success">Approved</span>
-  {% elif payment_pending %}
-    <span class="badge bg-warning text-dark">Pending</span>
-  {% else %}
-    <span class="badge bg-secondary">Not paid</span>
-  {% endif %}
-</p>
+      <p class="mt-2">
+        <strong>Payment:</strong>
+        {% if profile.is_payment_approved %}
+          <span class="badge bg-success">Approved</span>
+        {% else %}
+          <span class="badge bg-warning text-dark">Pending / Not paid</span>
+        {% endif %}
+      </p>
 
-
-        <div class="mt-3 d-grid gap-2">
-          <a class="btn btn-outline-success" href="{% url 'add_progress' %}">Add Progress</a>
-          <a class="btn btn-outline-primary" href="{% url 'make_payment' %}">Make Payment</a>
-        </div>
+      <div class="mt-3 d-grid gap-2">
+        <a class="btn btn-outline-success btn-sm" href="{% url 'add_progress' %}">Add Progress</a>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'make_payment' %}">Make Payment</a>
       </div>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h6>Latest Workout</h6>
-        {% if workouts %}
-          <div><strong>{{ workouts.0.title }}</strong></div>
-          <div class="text-muted small">{{ workouts.0.created_at|date:"Y-m-d H:i" }}</div>
+    <!-- Quick Analytics Cards -->
+    <div class="card glass p-3 mb-3">
+      <h6 class="mb-2">Body Metrics</h6>
+      <p class="mb-1"><strong>BMI:</strong>
+        {% if bmi %}
+          {{ bmi }} <span class="badge bg-info">{{ bmi_status }}</span>
         {% else %}
-          <div class="text-muted small">No workout plans yet.</div>
+          <span class="text-muted">Not enough data</span>
         {% endif %}
+      </p>
+      <p class="mb-1">
+        <strong>Weight Change:</strong>
+        {% if weight_change is not None %}
+          {{ weight_change|floatformat:1 }} kg
+        {% else %}
+          <span class="text-muted">Log progress to see change</span>
+        {% endif %}
+      </p>
+      <p class="mb-1">
+        <strong>Goal Progress:</strong>
+        {% if goal_progress_percent %}
+          {{ goal_progress_percent }}%
+          <div class="progress mt-1" style="height:6px;">
+            <div class="progress-bar bg-success" role="progressbar"
+                 style="width: {{ goal_progress_percent }}%;"></div>
+          </div>
+        {% else %}
+          <span class="text-muted">Needs more logs</span>
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- Weekly Activity "Calendar" -->
+    <div class="card glass p-3">
+      <h6 class="mb-2">Weekly Activity</h6>
+      <div class="d-flex justify-content-between">
+        {% for d in weekly_activity %}
+          <div class="text-center" style="flex:1;">
+            <div class="small text-muted">{{ d.label }}</div>
+            <div style="margin-top:4px;">
+              {% if d.active %}
+                <span class="badge bg-success">●</span>
+              {% else %}
+                <span class="badge bg-secondary">●</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
       </div>
+      <div class="small mt-2 text-muted">Green = day logged, Grey = no log</div>
     </div>
   </div>
 
-  <!-- Right column: chart and plans -->
+  <!-- RIGHT COLUMN: Chart + AI Coach + Plans -->
   <div class="col-lg-8">
-    <div class="card mb-3 shadow-sm">
+    <!-- Progress chart -->
+    <div class="card glass mb-3">
       <div class="card-body">
         <div class="d-flex justify-content-between">
-          <h5 class="card-title mb-0">Progress</h5>
-          <small class="text-muted">Weight over time</small>
+          <h5 class="card-title mb-0">Weight Progress</h5>
+          <small class="text-muted">Last entries</small>
         </div>
         <div style="height:220px; margin-top:12px;">
           <canvas id="progressChart"></canvas>
@@ -71,68 +113,144 @@
       </div>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h5 class="mb-0">AI Plans</h5>
-          <small class="text-muted">Latest first</small>
+    <!-- AI Coach + Diet Macros & Classes row -->
+    <div class="row">
+      <!-- AI Coach -->
+      <div class="col-md-6 mb-3">
+        <div class="card glass p-3">
+          <h5 class="mb-2">AI Coach (Mini)</h5>
+          <p class="small text-muted mb-2">Ask basic fitness questions (weight loss, muscle gain, cardio, diet...)</p>
+          <div id="coachChat" class="mb-2" style="max-height:180px; overflow-y:auto; font-size:0.9rem;">
+            <!-- Messages appended here -->
+          </div>
+          <form id="coachForm">
+            <div class="input-group">
+              <input type="text" id="coachQuestion" class="form-control" placeholder="Ask something...">
+              <button class="btn btn-outline-light" type="submit">Ask</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Diet Macros & Classes -->
+      <div class="col-md-6 mb-3">
+        <div class="card glass p-3 mb-3">
+          <h6 class="mb-1">Diet Macros (Approx %)</h6>
+          <small class="text-muted">Based on your goal</small>
+          <div style="height:160px;">
+            <canvas id="macrosChart"
+              data-protein="{{ macros.protein }}"
+              data-carbs="{{ macros.carbs }}"
+              data-fat="{{ macros.fat }}"></canvas>
+          </div>
         </div>
 
-        {% if workouts %}
-          <div class="accordion" id="plansAccordion">
-            {% for w in workouts %}
-              <div class="accordion-item mb-2" id="plan-card-{{ w.id }}">
-                <h2 class="accordion-header" id="heading-{{ w.id }}">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ w.id }}" aria-expanded="false" aria-controls="collapse-{{ w.id }}">
-                    <div class="me-3">
-                      <strong>{{ w.title }}</strong><br>
-                      <small class="text-muted">{{ w.created_at|date:"Y-m-d H:i" }}</small>
-                    </div>
-                  </button>
-                </h2>
-                <div id="collapse-{{ w.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ w.id }}" data-bs-parent="#plansAccordion">
-                  <div class="accordion-body">
-                    <pre style="white-space:pre-wrap;">{{ w.content }}</pre>
-                    <div class="d-flex justify-content-end gap-2 mt-2">
-                      <button class="btn btn-sm btn-outline-secondary btn-copy" data-content="{{ w.content|escapejs }}">Copy</button>
-                      <button class="btn btn-sm btn-danger btn-delete" data-id="{{ w.id }}">Delete</button>
-                    </div>
+        <div class="card glass p-3">
+          <h6 class="mb-2">Gym Classes (Beauty & Beast)</h6>
+          <ul class="small mb-0">
+            <li>🥊 <strong>Boxing</strong>: Mon, Wed, Fri – 6:00 PM</li>
+            <li>🏃 <strong>Cardio</strong>: Tue, Thu – 7:00 AM</li>
+            <li>🏋️ <strong>Weight Training</strong>: Daily – 7:00–10:00 AM, 5:00–9:00 PM</li>
+            <li>💪 <strong>Strength Training</strong>: Sat – 8:00 AM</li>
+            <li>⚡ <strong>Powerlifting</strong>: Sun – 9:00 AM (advanced)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div class="card glass p-3 mb-3">
+      <h5 class="mb-2">Achievements</h5>
+      {% if achievements %}
+        {% for a in achievements %}
+          <span class="badge bg-success me-1 mb-1">{{ a }}</span>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted mb-0">Start logging progress and generating plans to unlock badges.</p>
+      {% endif %}
+    </div>
+
+    <!-- Transformation Gallery -->
+    <div class="card glass p-3 mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Body Transformation</h5>
+        <small class="text-muted">Upload progress photos</small>
+      </div>
+      <form method="post" action="{% url 'upload_progress_photo' %}" enctype="multipart/form-data" class="mb-3">
+        {% csrf_token %}
+        <div class="row g-2">
+          <div class="col-8">
+            {{ photo_form.image }}
+          </div>
+          <div class="col-4">
+            {{ photo_form.caption }}
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-success mt-2">Upload Photo</button>
+      </form>
+
+      <div class="row g-2">
+        {% for p in photos %}
+          <div class="col-4">
+            <div class="card bg-dark border-0">
+              <img src="{{ p.image.url }}" class="card-img-top" alt="Progress photo">
+              <div class="card-body p-1">
+                <small class="text-muted">
+                  {{ p.created_at|date:"Y-m-d" }}{% if p.caption %} – {{ p.caption }}{% endif %}
+                </small>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-muted">No progress photos yet. Upload your first one.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- AI Plans list -->
+    <div class="card glass p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">AI Plans</h5>
+        <small class="text-muted">Latest first</small>
+      </div>
+
+      {% if workouts %}
+        <div class="accordion" id="plansAccordion">
+          {% for w in workouts %}
+            <div class="accordion-item mb-2" id="plan-card-{{ w.id }}">
+              <h2 class="accordion-header" id="heading-{{ w.id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ w.id }}">
+                  <div class="me-3">
+                    <strong>{{ w.title }}</strong><br>
+                    <small class="text-muted">{{ w.created_at|date:"Y-m-d H:i" }}</small>
+                  </div>
+                </button>
+              </h2>
+              <div id="collapse-{{ w.id }}" class="accordion-collapse collapse" data-bs-parent="#plansAccordion">
+                <div class="accordion-body">
+                  <pre style="white-space:pre-wrap;">{{ w.content }}</pre>
+                  <div class="d-flex justify-content-end gap-2 mt-2">
+                    <button class="btn btn-sm btn-outline-secondary btn-copy" data-content="{{ w.content|escapejs }}">Copy</button>
+                    <button class="btn btn-sm btn-danger btn-delete" data-id="{{ w.id }}">Delete</button>
                   </div>
                 </div>
               </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <p class="text-muted">No AI plans yet. Generate one to see day-by-day plans here.</p>
-        {% endif %}
-
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Confirmation modal (re-used for delete if needed) -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-body">
-        <p id="confirmText">Are you sure?</p>
-        <div class="d-flex justify-content-end gap-2 mt-3">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" id="confirmOk" class="btn btn-danger btn-sm">Delete</button>
+            </div>
+          {% endfor %}
         </div>
-      </div>
+      {% else %}
+        <p class="text-muted mb-0">No AI plans yet. Generate one to see day-by-day plans here.</p>
+      {% endif %}
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-/* ---------- Chart ---------- */
+// ---- Progress Chart ----
 fetch("{% url 'progress_data' %}")
   .then(r => r.json())
   .then(data => {
@@ -141,37 +259,42 @@ fetch("{% url 'progress_data' %}")
     const ctx = document.getElementById('progressChart').getContext('2d');
     new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ label: 'Weight (kg)', data: weights, tension: 0.3 }]},
+      data: { labels, datasets: [{ label: 'Weight (kg)', data: weights, tension: 0.3 }] },
       options: { responsive:true, maintainAspectRatio:false }
     });
-  }).catch(() => { /* ignore */ });
+  }).catch(()=>{});
 
-/* ---------- Helper: show toast message ---------- */
-function showToast(message, type='info') {
-  // create toast container if missing
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    container.style.position = 'fixed';
-    container.style.right = '20px';
-    container.style.top = '20px';
-    container.style.zIndex = '11000';
-    document.body.appendChild(container);
-  }
+// ---- Diet Macros Chart ----
+(function(){
+  const ctx = document.getElementById('macrosChart');
+  if (!ctx) return;
+  const protein = parseInt(ctx.dataset.protein || '0');
+  const carbs = parseInt(ctx.dataset.carbs || '0');
+  const fat = parseInt(ctx.dataset.fat || '0');
 
-  const colors = {info:'bg-primary text-white', success:'bg-success text-white', error:'bg-danger text-white', warning:'bg-warning text-dark'};
-  const toast = document.createElement('div');
-  toast.className = 'toast ' + (colors[type] || colors.info);
-  toast.style.padding = '10px 14px';
-  toast.style.marginTop = '8px';
-  toast.style.borderRadius = '8px';
-  toast.textContent = message;
-  container.appendChild(toast);
-  setTimeout(()=> { toast.style.opacity = '0'; setTimeout(()=> toast.remove(), 400); }, 3500);
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Protein', 'Carbs', 'Fat'],
+      datasets: [{
+        data: [protein, carbs, fat]
+      }]
+    },
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom'}}
+    }
+  });
+})();
+
+// ---- CSRF helper ----
+function getCookie(name) {
+  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return v ? v.pop() : '';
 }
 
-/* ---------- Generate Plan (AJAX) ---------- */
+// ---- Generate Plan (AJAX) ----
 const btnGenerate = document.getElementById('btn-generate');
 if (btnGenerate) {
   btnGenerate.addEventListener('click', async function() {
@@ -188,14 +311,13 @@ if (btnGenerate) {
       });
       const data = await resp.json();
       if (resp.ok && data.ok) {
-        showToast(data.message || 'Plan generated', 'success');
-        // reload only the plans area (simple approach: reload page body via location.reload)
+        alert(data.message || 'Plan generated');
         setTimeout(()=> location.reload(), 800);
       } else {
-        showToast(data.message || 'Failed to generate', 'error');
+        alert(data.message || 'Failed to generate');
       }
     } catch (e) {
-      showToast('Network error while generating plan', 'error');
+      alert('Network error while generating plan');
     } finally {
       spinner.classList.add('d-none');
       btnGenerate.disabled = false;
@@ -204,52 +326,82 @@ if (btnGenerate) {
   });
 }
 
-/* ---------- Delete Plan (AJAX) ---------- */
-let planToDelete = null;
+// ---- Delete Plan (AJAX) ----
 document.querySelectorAll('.btn-delete').forEach(btn => {
-  btn.addEventListener('click', function(e) {
-    planToDelete = this.getAttribute('data-id');
-    // show confirm modal
-    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    document.getElementById('confirmText').textContent = 'Delete this plan? This action cannot be undone.';
-    document.getElementById('confirmOk').textContent = 'Delete';
-    confirmModal.show();
-
-    document.getElementById('confirmOk').onclick = async function() {
-      confirmModal.hide();
-      try {
-        const resp = await fetch(`{% url 'delete_plan_ajax' 0 %}`.replace('/0/','/' + planToDelete + '/'), {
-          method: 'POST',
-          headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Accept':'application/json' },
-        });
-        const data = await resp.json();
-        if (resp.ok && data.ok) {
-          showToast('Plan deleted', 'success');
-          // remove card from DOM
-          const el = document.getElementById('plan-card-' + planToDelete);
-          if (el) el.remove();
-        } else {
-          showToast(data.message || 'Delete failed', 'error');
-        }
-      } catch (e) {
-        showToast('Network error deleting plan', 'error');
+  btn.addEventListener('click', async function() {
+    if (!confirm('Delete this plan?')) return;
+    const id = this.getAttribute('data-id');
+    try {
+      const resp = await fetch(`{% url 'delete_plan_ajax' 0 %}`.replace('/0/','/' + id + '/'), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Accept':'application/json' },
+      });
+      const data = await resp.json();
+      if (resp.ok && data.ok) {
+        const el = document.getElementById('plan-card-' + id);
+        if (el) el.remove();
+      } else {
+        alert(data.message || 'Delete failed');
       }
-    };
+    } catch (e) {
+      alert('Network error deleting plan');
+    }
   });
 });
 
-/* ---------- Copy to clipboard ---------- */
+// ---- Copy Plan ----
 document.querySelectorAll('.btn-copy').forEach(btn => {
   btn.addEventListener('click', function() {
     const content = this.getAttribute('data-content');
-    navigator.clipboard.writeText(content).then(()=> showToast('Copied to clipboard','success')).catch(()=> showToast('Copy failed','error'));
+    navigator.clipboard.writeText(content).then(()=> alert('Copied to clipboard'));
   });
 });
 
-/* ---------- small helper to read CSRF cookie ---------- */
-function getCookie(name) {
-  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-  return v ? v.pop() : '';
+// ---- AI Coach Chat ----
+const coachForm = document.getElementById('coachForm');
+const coachInput = document.getElementById('coachQuestion');
+const coachChat = document.getElementById('coachChat');
+
+function appendCoachMessage(text, from) {
+  const div = document.createElement('div');
+  div.style.marginBottom = '6px';
+  if (from === 'user') {
+    div.innerHTML = `<strong>You:</strong> ${text}`;
+  } else {
+    div.innerHTML = `<strong>Coach:</strong> ${text}`;
+  }
+  coachChat.appendChild(div);
+  coachChat.scrollTop = coachChat.scrollHeight;
+}
+
+if (coachForm && coachInput && coachChat) {
+  coachForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = coachInput.value.trim();
+    if (!q) return;
+    appendCoachMessage(q, 'user');
+    coachInput.value = '';
+
+    try {
+      const resp = await fetch("{% url 'ai_coach_ajax' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Accept':'application/json',
+          'Content-Type':'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({question: q})
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        appendCoachMessage(data.answer, 'coach');
+      } else {
+        appendCoachMessage(data.answer || 'Error from coach', 'coach');
+      }
+    } catch (e) {
+      appendCoachMessage('Network error while contacting coach.', 'coach');
+    }
+  });
 }
 </script>
 {% endblock %}

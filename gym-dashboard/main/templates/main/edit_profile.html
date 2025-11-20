@@ -1,11 +1,201 @@
 {% extends "main/base.html" %}
 {% block title %}Edit Profile{% endblock %}
+
 {% block content %}
-<h2>Edit Profile</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button class="btn btn-primary">Save</button>
-  <a class="btn btn-secondary" href="{% url 'dashboard' %}">Cancel</a>
-</form>
+
+<style>
+  /* Glass card styling to match rest of app */
+  .profile-card {
+    background: rgba(255,255,255,0.06);
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.16);
+    backdrop-filter: blur(14px);
+    padding: 28px 26px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+  }
+
+  .profile-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+
+  .profile-subtitle {
+    font-size: 0.95rem;
+    color: #cbd5f5;
+  }
+
+  .avatar-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#22c55e,#14b8a6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #020617;
+    font-size: 1.2rem;
+  }
+
+  .profile-card label {
+    color: #e5e7eb;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .profile-card input,
+  .profile-card select,
+  .profile-card textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(148,163,184,0.6);
+    background: rgba(15,23,42,0.75);
+    color: #f9fafb;
+    box-sizing: border-box;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+
+  .profile-card input:focus,
+  .profile-card select:focus,
+  .profile-card textarea:focus {
+    outline: none;
+    border-color: #22d3ee;
+    background: rgba(15,23,42,0.95);
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.4);
+  }
+
+  .field-wrapper {
+    margin-bottom: 14px;
+  }
+
+  .text-danger.small {
+    color: #fb7185 !important;
+    font-size: 0.78rem;
+  }
+
+  .btn-save {
+    padding: 9px 22px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  .btn-cancel {
+    border-radius: 999px;
+  }
+
+  .unsaved-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background:#22c55e;
+    display:inline-block;
+    margin-right:6px;
+    opacity:0;
+    transition: opacity .2s ease;
+  }
+
+  .unsaved-dot.active {
+    opacity:1;
+  }
+</style>
+
+<div class="row justify-content-center py-4">
+  <div class="col-lg-8 col-md-10">
+    <div class="profile-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="avatar-circle">
+            {{ user.username|slice:":1"|upper }}
+          </div>
+          <div>
+            <div class="profile-title">Edit Profile</div>
+            <div class="profile-subtitle">
+              Update your personal & fitness details to get better AI workout and diet plans.
+            </div>
+          </div>
+        </div>
+        <div class="text-end small text-muted">
+          <span id="unsavedDot" class="unsaved-dot"></span>
+          <span id="unsavedText" style="font-size:0.8rem;">All changes saved</span>
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <form method="post" id="editProfileForm" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-3">
+          {% for field in form %}
+            <div class="col-md-6">
+              <div class="field-wrapper">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                  <div class="form-text text-secondary" style="font-size:0.78rem;">{{ field.help_text }}</div>
+                {% endif %}
+                {% if field.errors %}
+                  <div class="text-danger small">{{ field.errors|striptags }}</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <button type="submit" class="btn btn-success btn-save">Save changes</button>
+          <a class="btn btn-outline-light btn-cancel" href="{% url 'dashboard' %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Track unsaved changes
+  const form = document.getElementById('editProfileForm');
+  const unsavedDot = document.getElementById('unsavedDot');
+  const unsavedText = document.getElementById('unsavedText');
+  let isDirty = false;
+
+  function markDirty() {
+    if (!isDirty) {
+      isDirty = true;
+      if (unsavedDot) unsavedDot.classList.add('active');
+      if (unsavedText) unsavedText.textContent = 'Unsaved changes';
+    }
+  }
+
+  if (form) {
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+      el.addEventListener('input', markDirty);
+      el.addEventListener('change', markDirty);
+    });
+
+    form.addEventListener('submit', () => {
+      isDirty = false;
+      if (unsavedDot) unsavedDot.classList.remove('active');
+      if (unsavedText) unsavedText.textContent = 'All changes saved';
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+    });
+  }
+
+  function beforeUnloadHandler(e) {
+    if (!isDirty) return;
+    e.preventDefault();
+    e.returnValue = '';
+  }
+
+  window.addEventListener('beforeunload', beforeUnloadHandler);
+</script>
 {% endblock %}

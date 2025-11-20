@@ -90,9 +90,16 @@
   <p>Your personal AI-powered fitness dashboard — workouts, diet, tracking &amp; more.</p>
 
   <div class="mt-4">
+  {% if user.is_authenticated %}
+    <a href="{% url 'dashboard' %}" class="btn btn-success btn-cta">
+      Go to Dashboard
+    </a>
+  {% else %}
     <a href="{% url 'login' %}" class="btn btn-primary btn-cta">Login</a>
-    <a href="{% url 'register' %}" class="btn btn-outline-light btn-cta">Register</a>
-  </div>
+    <a href="{% url 'register' %}" class="btn btn-outline-light btn-cta">Join Now</a>
+  {% endif %}
+</div>
+
 </section>
 
 <!-- ===== ABOUT GYM & OWNER ===== -->
@@ -133,7 +140,7 @@
           <span class="facility-pill">⚡ Powerlifting Setup</span>
         </div>
         <div>
-          <a href="https://www.google.com/maps?q=Beauty+%26+Beast+Gym+Dehradun" 
+          <a href="https://maps.app.goo.gl/AxAF9bVNr1dYgFPe6" 
              target="_blank"
              class="btn btn-outline-success">
             Locate Us on Google Maps

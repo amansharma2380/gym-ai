@@ -4,14 +4,21 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from django.urls import reverse
-from .forms import UserRegistrationForm, MemberProfileForm, ProgressEntryForm, PaymentForm
-from .models import MemberProfile, Payment, WorkoutPlan, DietPlan, ProgressEntry
+from .forms import (
+    UserRegistrationForm,
+    MemberProfileForm,
+    ProgressEnteryForm,
+    PaymentForm,
+    ProgressPhotoForm,
+)
+
+from .models import MemberProfile, Payment, WorkoutPlan, DietPlan, Progress
 from .ai_utils import generate_plans
 from .ai_parser import save_parsed_plans
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .serializers import ProgressEntrySerializer
+from .serializers import ProgressSerializer
 from .ai_utils import generate_plans
 from .ai_json_parser import save_json_plan
 from django.contrib.auth.decorators import login_required
@@ -19,6 +26,13 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from datetime import timedelta
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import WorkoutPlan, Progress, ProgressPhoto
+from .forms import ProgressPhotoForm
+
 @require_POST
 @login_required
 def generate_plan_ajax(request):
@@ -72,7 +86,7 @@ def delete_plan_ajax(request, plan_id):
 def api_progress_list(request):
     profile = request.user.memberprofile
     entries = profile.progress.order_by('date')
-    serializer = ProgressEntrySerializer(entries, many=True)
+    serializer = ProgressSerializer(entries, many=True)
     return Response(serializer.data)
 
 def home(request):
@@ -126,7 +140,7 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect('home')
-from .forms import MemberProfileForm, ProgressEntryForm
+from .forms import MemberProfileForm, ProgressEnteryForm
 from django.contrib.auth.decorators import login_required
 
 @login_required
@@ -159,7 +173,7 @@ def delete_plan(request, id):
 def add_progress(request):
     profile = request.user.memberprofile
     if request.method == 'POST':
-        form = ProgressEntryForm(request.POST)
+        form = ProgressEnteryForm(request.POST)   # ← correct name here
         if form.is_valid():
             pe = form.save(commit=False)
             pe.member = profile
@@ -167,25 +181,154 @@ def add_progress(request):
             messages.success(request, "Progress entry added.")
             return redirect('dashboard')
     else:
-        form = ProgressEntryForm()
+        form = ProgressEnteryForm()
     return render(request, 'main/add_progress.html', {'form': form})
 
 
 @login_required
 def dashboard(request):
     profile = request.user.memberprofile
-    workouts = profile.workouts.order_by('-created_at')[:20]  # show more recent items
+
+    workouts = profile.workouts.order_by('-created_at')[:10]
     diets = profile.diets.order_by('-created_at')[:5]
-    progress = profile.progress.order_by('-date')[:20]
-    # compute payment pending flag here (safe in view)
-    payment_pending = profile.payments.filter(status='Pending').exists()
-    return render(request, 'main/dashboard.html', {
-        'profile': profile,
-        'workouts': workouts,
-        'diets': diets,
-        'progress': progress,
-        'payment_pending': payment_pending,
-    })
+    progress_qs = profile.progress.order_by('date')  # oldest → newest
+    progress_recent = profile.progress.order_by('-date')[:20]
+    photos = profile.photos.order_by('-created_at')[:6]
+
+    # --- ANALYTICS: BMI, weight change, goal progress ---
+    bmi = None
+    bmi_status = None
+    start_weight = None
+    current_weight = None
+    weight_change = None
+    progress_count = progress_qs.count()
+
+    if progress_count > 0:
+        start_weight = progress_qs.first().weight_kg
+        current_weight = progress_qs.last().weight_kg
+        if start_weight and current_weight:
+            weight_change = current_weight - start_weight  # positive = gain, negative = loss
+
+    if profile.height_cm and (profile.weight_kg or current_weight):
+        h_m = profile.height_cm / 100.0
+        w = current_weight or profile.weight_kg
+        if h_m > 0 and w:
+            bmi = round(w / (h_m * h_m), 1)
+            if bmi < 18.5:
+                bmi_status = "Underweight"
+            elif bmi < 25:
+                bmi_status = "Normal"
+            elif bmi < 30:
+                bmi_status = "Overweight"
+            else:
+                bmi_status = "Obese"
+
+    # simple goal progress estimate based on weight change
+    goal_progress_percent = 0
+    if weight_change is not None and profile.goal:
+        g = profile.goal.lower()
+        if "loss" in g or "fat" in g:
+            target = 8.0  # assume 8 kg target loss
+            loss = max(0, start_weight - current_weight)
+            goal_progress_percent = min(100, int((loss / target) * 100))
+        elif "gain" in g or "muscle" in g:
+            target = 5.0
+            gain = max(0, current_weight - start_weight)
+            goal_progress_percent = min(100, int((gain / target) * 100))
+
+    # --- WEEKLY ACTIVITY (last 7 days progress calendar) ---
+    today = timezone.now().date()
+    last7 = []
+    progress_dates = set(p.date for p in progress_qs if p.date)
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        label = d.strftime('%a')  # Mon, Tue...
+        last7.append({
+            "label": label,
+            "date": d,
+            "active": d in progress_dates
+        })
+
+    # --- DIET MACROS (simple percentages based on goal) ---
+    goal = (profile.goal or "").lower()
+    if "loss" in goal or "fat" in goal:
+        macros = {"protein": 40, "carbs": 30, "fat": 30}
+    elif "gain" in goal or "muscle" in goal:
+        macros = {"protein": 35, "carbs": 45, "fat": 20}
+    else:
+        macros = {"protein": 30, "carbs": 45, "fat": 25}
+
+    # --- ACHIEVEMENTS / BADGES ---
+    achievements = []
+    if progress_count >= 1:
+        achievements.append("First Step: Logged your progress")
+    if progress_count >= 7:
+        achievements.append("Consistency: 7+ progress updates")
+    if progress_count >= 30:
+        achievements.append("Committed: 30+ progress logs")
+    if workouts.exists():
+        achievements.append("AI Explorer: Generated workout plan")
+    if bmi and 18.5 <= bmi <= 24.9:
+        achievements.append("Healthy BMI Range")
+
+    photo_form = ProgressPhotoForm()
+
+    context = {
+        "profile": profile,
+        "workouts": workouts,
+        "diets": diets,
+        "progress": progress_recent,
+        "bmi": bmi,
+        "bmi_status": bmi_status,
+        "start_weight": start_weight,
+        "current_weight": current_weight,
+        "weight_change": weight_change,
+        "goal_progress_percent": goal_progress_percent,
+        "weekly_activity": last7,
+        "macros": macros,
+        "achievements": achievements,
+        "photos": photos,
+        "photo_form": photo_form,
+    }
+    return render(request, "main/dashboard.html", context)
+@require_POST
+@login_required
+def ai_coach_ajax(request):
+    question = request.POST.get("question", "").strip()
+    if not question:
+        return JsonResponse({"ok": False, "answer": "Please type a question first."})
+
+    q = question.lower()
+    # Simple rule-based responses; you can swap with OpenAI later if quota allows
+    if "weight loss" in q or "fat" in q:
+        answer = (
+            "For effective weight loss: focus on a small calorie deficit, "
+            "3–5 days of cardio, and 2–3 days of strength training weekly. "
+            "Keep protein high and track your progress consistently."
+        )
+    elif "muscle" in q or "bulk" in q:
+        answer = (
+            "For muscle gain: train each muscle group 2x per week with progressive overload, "
+            "sleep 7–8 hours, and aim for a slight calorie surplus with high protein."
+        )
+    elif "cardio" in q:
+        answer = (
+            "Cardio suggestion: 20–30 minutes, 3–4 times per week. "
+            "Mix steady-state with one HIIT session if you are comfortable."
+        )
+    elif "diet" in q or "food" in q or "meal" in q:
+        answer = (
+            "Basic diet guideline: include a lean protein, complex carb, and vegetables in each meal. "
+            "Limit sugary drinks and processed foods. Drink plenty of water."
+        )
+    else:
+        answer = (
+            "Great question! For best results, combine regular strength training, some cardio, "
+            "good sleep, and a balanced diet. Start simple and stay consistent."
+        )
+
+    return JsonResponse({"ok": True, "answer": answer})
+
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -273,6 +416,39 @@ def generate_plan(request, member_id=None):
 
     return redirect('dashboard')
 
+@require_POST
+@login_required
+def upload_progress_photo(request):
+    profile = request.user.memberprofile
+    form = ProgressPhotoForm(request.POST, request.FILES)
+
+    if form.is_valid():
+        photo = form.save(commit=False)
+        photo.member = profile
+        photo.save()
+        messages.success(request, "Progress photo uploaded successfully.")
+
+        # If using AJAX, return JSON
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "ok": True,
+                "message": "Photo uploaded.",
+                "photo_id": photo.id,
+                "created_at": photo.created_at.isoformat(),
+            })
+
+        # Normal form submission fallback
+        return redirect("dashboard")
+
+    # Form invalid
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({
+            "ok": False,
+            "errors": form.errors,
+        }, status=400)
+
+    messages.error(request, "Failed to upload photo. Please check the form.")
+    return redirect("dashboard")
 
 
 @login_required

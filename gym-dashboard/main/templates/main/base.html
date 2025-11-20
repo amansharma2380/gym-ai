@@ -124,60 +124,84 @@ form select option {
   color: #ff6b6b !important;
   font-weight: 500;
 }
+/* Fix dropdown hidden behind graph or glass cards */
+.dropdown-menu {
+  z-index: 9999 !important;
+  position: absolute !important;
+}
+.navbar {
+  z-index: 10000 !important;
+  position: relative;
+}
+
 
     </style>
   </head>
 
   <body>
     <nav class="navbar navbar-expand-lg">
-      <div class="container">
-        <a class="navbar-brand" href="{% url 'home' %}">
-          <span class="brand-accent">Beauty</span> &nbsp; $ &nbsp;<span style="opacity:.9">Beast</span>
-        </a>
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'home' %}">
+      <span class="brand-accent">Beauty</span> &nbsp; $ &nbsp;<span style="opacity:.9">Beast</span>
+    </a>
 
-        <button class="navbar-toggler btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
-            <path d="M2.5 12.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0-4a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0-4a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11z"/>
-          </svg>
-        </button>
+    <button class="navbar-toggler btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+        <path d="M2.5 12.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0-4a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm0-4a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11z"/>
+      </svg>
+    </button>
 
-        <div class="collapse navbar-collapse" id="mainNav">
-          <ul class="navbar-nav ms-auto align-items-center">
-            <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Join</a></li>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'home' %}">Home</a>
+        </li>
 
-            {% if user.is_authenticated %}
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
-                  <div class="avatar me-2 text-dark">
-                    <!-- Simple initials avatar -->
-                    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#0b1220;font-weight:700;">
-                      {{ user.username|slice:":1"|upper }}
-                    </div>
-                  </div>
-                  <span class="me-2">{{ user.username }}</span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="{% url 'dashboard' %}">My Dashboard</a></li>
-                  <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Edit Profile</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
-                </ul>
-              </li>
-            {% else %}
-              <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
-            {% endif %}
+        {% if user.is_authenticated %}
+          <!-- LOGGED IN: show Dashboard + avatar dropdown, no Join/Login -->
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+          </li>
 
-            <li class="nav-item ms-3">
-              <button id="themeToggle" class="btn btn-sm btn-outline-light" title="Toggle dark mode">
-                <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+              <div class="avatar me-2 text-dark">
+                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#0b1220;font-weight:700;">
+                  {{ user.username|slice:":1"|upper }}
+                </div>
+              </div>
+              <span class="me-2">{{ user.username }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{% url 'dashboard' %}">My Dashboard</a></li>
+              <li><a class="dropdown-item" href="{% url 'edit_profile' %}">Edit Profile</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
+            </ul>
+          </li>
+
+        {% else %}
+          <!-- NOT LOGGED IN: show Join + Login -->
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'register' %}">Join</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login' %}">Login</a>
+          </li>
+        {% endif %}
+
+        <li class="nav-item ms-3">
+          <button id="themeToggle" class="btn btn-sm btn-outline-light" title="Toggle dark mode">
+            <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+            </svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
 
     <main class="container app-container">
       {% for message in messages %}

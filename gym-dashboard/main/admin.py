@@ -2,7 +2,8 @@
 from django.contrib import admin
 from django.db import transaction
 from django.core.mail import send_mail
-from .models import MemberProfile, WorkoutPlan, DietPlan, ProgressEntry, Payment
+from .models import MemberProfile, WorkoutPlan, DietPlan, Progress, Payment
+
 
 @admin.action(description='Approve selected payments and activate member')
 def approve_payments(modeladmin, request, queryset):
@@ -52,5 +53,5 @@ class PaymentAdmin(admin.ModelAdmin):
 admin.site.register(MemberProfile)
 admin.site.register(WorkoutPlan)
 admin.site.register(DietPlan)
-admin.site.register(ProgressEntry)
+admin.site.register(Progress)
 admin.site.register(Payment, PaymentAdmin)
